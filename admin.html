@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PYOV — BACKOFFICE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void:   #050407;
+      --deep:   #0c0b10;
+      --ink:    #141218;
+      --smoke:  #1e1c24;
+      --dust:   #2c2934;
+      --ash:    #4a4558;
+      --fog:    #7a7490;
+      --pale:   #c8c2d8;
+      --bone:   #ede8e0;
+      --red:    #d4190f;
+      --red2:   #ff3326;
+      --yellow: #f5d800;
+      --cyan:   #00e5cc;
+      --fb: 'Bebas Neue', sans-serif;
+      --fm: 'IBM Plex Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--void);
+      color: var(--bone);
+      font-family: var(--fm);
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--ink);
+      border-bottom: 2px solid var(--red);
+      padding: 0 40px;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-title {
+      font-family: var(--fb);
+      font-size: 22px;
+      letter-spacing: 3px;
+      color: var(--bone);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-title .dot {
+      width: 8px; height: 8px;
+      background: var(--red2);
+      border-radius: 50%;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
+    .header-count {
+      font-size: 11px;
+      color: var(--fog);
+      letter-spacing: 2px;
+    }
+    .header-count span {
+      color: var(--yellow);
+      font-weight: 700;
+    }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 0;
+      min-height: calc(100vh - 54px);
+    }
+
+    /* ── FORM PANEL ── */
+    .form-panel {
+      background: var(--deep);
+      border-right: 1px solid var(--smoke);
+      padding: 32px 28px;
+      overflow-y: auto;
+    }
+
+    .panel-label {
+      font-family: var(--fb);
+      font-size: 13px;
+      letter-spacing: 4px;
+      color: var(--red);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .panel-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--smoke);
+    }
+
+    /* Photo drop zone */
+    .drop-zone {
+      border: 1px dashed var(--ash);
+      background: var(--ink);
+      border-radius: 4px;
+      aspect-ratio: 4/3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .drop-zone:hover, .drop-zone.over {
+      border-color: var(--red);
+      background: var(--smoke);
+    }
+    .drop-zone.has-img { border-style: solid; border-color: var(--red); }
+    .drop-zone-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: var(--ash);
+    }
+    .drop-zone-text {
+      color: var(--fog);
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+    .drop-zone-text strong { color: var(--pale); display: block; margin-bottom: 4px; font-size: 12px; }
+    .drop-zone img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .drop-zone .remove-img {
+      position: absolute;
+      top: 8px; right: 8px;
+      background: rgba(5,4,7,0.8);
+      border: 1px solid var(--red);
+      color: var(--red2);
+      font-family: var(--fm);
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 4px 8px;
+      cursor: pointer;
+      display: none;
+    }
+    .drop-zone.has-img .remove-img { display: block; }
+    #fileInput { display: none; }
+
+    /* Fields */
+    .field {
+      margin-bottom: 18px;
+    }
+    .field label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--fog);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .field label .req { color: var(--red); margin-left: 2px; }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      background: var(--ink);
+      border: 1px solid var(--smoke);
+      color: var(--bone);
+      font-family: var(--fm);
+      font-size: 13px;
+      padding: 10px 12px;
+      border-radius: 3px;
+      outline: none;
+      transition: border-color .2s;
+      resize: none;
+    }
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: var(--red);
+    }
+    .field textarea { height: 80px; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* Prix special */
+    .price-wrap {
+      position: relative;
+    }
+    .price-wrap .currency {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--yellow);
+      font-weight: 700;
+      pointer-events: none;
+    }
+    .price-wrap input { padding-left: 26px; }
+
+    /* Submit */
+    .btn-submit {
+      width: 100%;
+      background: var(--red);
+      color: var(--bone);
+      border: none;
+      font-family: var(--fb);
+      font-size: 16px;
+      letter-spacing: 4px;
+      padding: 14px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background .2s, transform .1s;
+      margin-top: 8px;
+    }
+    .btn-submit:hover { background: var(--red2); }
+    .btn-submit:active { transform: scale(0.98); }
+
+    .msg {
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 10px;
+      margin-top: 12px;
+      border-radius: 3px;
+      display: none;
+    }
+    .msg.success { background: rgba(0,229,204,0.1); color: var(--cyan); border: 1px solid rgba(0,229,204,0.3); display: block; }
+    .msg.error   { background: rgba(212,25,15,0.1);  color: var(--red2);  border: 1px solid rgba(212,25,15,0.3);  display: block; }
+
+    /* ── GALLERY PANEL ── */
+    .gallery-panel {
+      padding: 32px;
+      overflow-y: auto;
+    }
+
+    .gallery-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .btn-export {
+      background: transparent;
+      border: 1px solid var(--yellow);
+      color: var(--yellow);
+      font-family: var(--fm);
+      font-size: 10px;
+      letter-spacing: 3px;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: background .2s;
+    }
+    .btn-export:hover { background: rgba(245,216,0,0.1); }
+
+    .btn-clear-all {
+      background: transparent;
+      border: 1px solid var(--smoke);
+      color: var(--fog);
+      font-family: var(--fm);
+      font-size: 10px;
+      letter-spacing: 3px;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: border-color .2s, color .2s;
+    }
+    .btn-clear-all:hover { border-color: var(--red); color: var(--red2); }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      color: var(--ash);
+      padding: 80px 40px;
+      border: 1px dashed var(--dust);
+      border-radius: 4px;
+    }
+    .empty-icon { font-size: 40px; margin-bottom: 16px; }
+    .empty-text { font-size: 11px; letter-spacing: 3px; }
+
+    /* Cards grid */
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .work-card {
+      background: var(--ink);
+      border: 1px solid var(--smoke);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color .2s;
+      position: relative;
+    }
+    .work-card:hover { border-color: var(--ash); }
+
+    .work-card-img {
+      aspect-ratio: 4/3;
+      background: var(--smoke);
+      overflow: hidden;
+      position: relative;
+    }
+    .work-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .work-card-img .no-img {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ash);
+      font-size: 28px;
+    }
+    .work-card-num {
+      position: absolute;
+      top: 8px; left: 8px;
+      background: var(--red);
+      color: var(--bone);
+      font-family: var(--fb);
+      font-size: 12px;
+      letter-spacing: 2px;
+      padding: 2px 7px;
+      border-radius: 2px;
+    }
+
+    .work-card-body {
+      padding: 12px;
+    }
+    .work-card-title {
+      font-family: var(--fb);
+      font-size: 16px;
+      letter-spacing: 2px;
+      color: var(--bone);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .work-card-meta {
+      font-size: 10px;
+      color: var(--fog);
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+    .work-card-price {
+      font-weight: 700;
+      color: var(--yellow);
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+    .work-card-intention {
+      font-size: 10px;
+      color: var(--pale);
+      margin-top: 6px;
+      font-style: italic;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .work-card-actions {
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid var(--smoke);
+    }
+    .btn-del {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--smoke);
+      color: var(--fog);
+      font-family: var(--fm);
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 6px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-del:hover { border-color: var(--red); color: var(--red2); }
+
+    /* Export modal */
+    .modal-bg {
+      position: fixed; inset: 0;
+      background: rgba(5,4,7,0.9);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-bg.open { display: flex; }
+    .modal {
+      background: var(--deep);
+      border: 1px solid var(--smoke);
+      border-top: 2px solid var(--yellow);
+      border-radius: 4px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--smoke);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--fb);
+      font-size: 16px;
+      letter-spacing: 3px;
+      color: var(--yellow);
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--fog);
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .modal-close:hover { color: var(--bone); }
+    .modal-body {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+    }
+    .modal-body pre {
+      background: var(--ink);
+      border: 1px solid var(--smoke);
+      border-radius: 3px;
+      padding: 16px;
+      font-family: var(--fm);
+      font-size: 11px;
+      color: var(--cyan);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--smoke);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn-copy {
+      background: var(--yellow);
+      color: var(--void);
+      border: none;
+      font-family: var(--fm);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 9px 20px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .btn-copy:hover { opacity: 0.85; }
+
+    ::-webkit-scrollbar { width: 2px; }
+    ::-webkit-scrollbar-track { background: var(--void); }
+    ::-webkit-scrollbar-thumb { background: var(--red); }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="header">
+  <div class="header-title">
+    <span class="dot"></span>
+    BACKOFFICE — PYOV
+  </div>
+  <div class="header-count">ŒUVRES : <span id="countDisplay">0</span></div>
+</header>
+
+<!-- ── LAYOUT ── -->
+<div class="layout">
+
+  <!-- ── FORM ── -->
+  <aside class="form-panel">
+    <div class="panel-label">NOUVELLE ŒUVRE</div>
+
+    <!-- Photo -->
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-zone-icon">⬡</div>
+      <div class="drop-zone-text">
+        <strong>GLISSER UNE PHOTO</strong>
+        ou cliquer pour sélectionner
+      </div>
+      <button class="remove-img" id="removeImg" type="button">✕ RETIRER</button>
+    </div>
+    <input type="file" id="fileInput" accept="image/*">
+
+    <!-- Titre -->
+    <div class="field">
+      <label>TITRE<span class="req">*</span></label>
+      <input type="text" id="fieldTitre" placeholder="Ex. WHY SO SERIOUS № 002"/>
+    </div>
+
+    <!-- Prix -->
+    <div class="field">
+      <label>PRIX<span class="req">*</span></label>
+      <div class="price-wrap">
+        <span class="currency">€</span>
+        <input type="number" id="fieldPrix" placeholder="1200" min="0" step="50"/>
+      </div>
+    </div>
+
+    <!-- Dimensions + Matière -->
+    <div class="field-row">
+      <div class="field">
+        <label>DIMENSIONS</label>
+        <input type="text" id="fieldDimensions" placeholder="120 × 160 cm"/>
+      </div>
+      <div class="field">
+        <label>MATIÈRE</label>
+        <input type="text" id="fieldMatiere" placeholder="Acrylique, Huile…"/>
+      </div>
+    </div>
+
+    <!-- Intention -->
+    <div class="field">
+      <label>INTENTION</label>
+      <textarea id="fieldIntention" placeholder="La note de l'artiste, l'intention derrière la pièce…"></textarea>
+    </div>
+
+    <button class="btn-submit" id="btnAjouter">+ AJOUTER L'ŒUVRE</button>
+    <div class="msg" id="msg"></div>
+  </aside>
+
+  <!-- ── GALERIE ── -->
+  <main class="gallery-panel">
+    <div class="gallery-toolbar">
+      <div class="panel-label" style="margin-bottom:0; flex:1">CATALOGUE</div>
+      <div style="display:flex; gap:10px">
+        <button class="btn-export" id="btnExport">↓ EXPORTER JSON</button>
+        <button class="btn-clear-all" id="btnClearAll">TOUT EFFACER</button>
+      </div>
+    </div>
+
+    <div id="galleryContent"></div>
+  </main>
+</div>
+
+<!-- ── EXPORT MODAL ── -->
+<div class="modal-bg" id="exportModal">
+  <div class="modal">
+    <div class="modal-header">
+      EXPORT JSON
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <pre id="jsonOutput"></pre>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-close btn-copy" id="btnCopy" style="color:var(--void)">COPIER</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORE_KEY = 'pyov_works';
+  let works = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+  let currentImg = null; // base64 or null
+
+  /* ── Persist ── */
+  function save() {
+    localStorage.setItem(STORE_KEY, JSON.stringify(works));
+    document.getElementById('countDisplay').textContent = works.length;
+  }
+
+  /* ── Render gallery ── */
+  function render() {
+    const el = document.getElementById('galleryContent');
+    document.getElementById('countDisplay').textContent = works.length;
+
+    if (!works.length) {
+      el.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">◻</div>
+          <div class="empty-text">AUCUNE ŒUVRE ENREGISTRÉE</div>
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = `<div class="works-grid">${works.map((w, i) => `
+      <div class="work-card">
+        <div class="work-card-img">
+          ${w.photo
+            ? `<img src="${w.photo}" alt="${w.titre}">`
+            : `<div class="no-img">◻</div>`}
+          <span class="work-card-num">№ ${String(i + 1).padStart(3, '0')}</span>
+        </div>
+        <div class="work-card-body">
+          <div class="work-card-title">${w.titre || '—'}</div>
+          <div class="work-card-meta">${[w.matiere, w.dimensions].filter(Boolean).join(' · ') || '—'}</div>
+          <div class="work-card-price">${w.prix ? '€ ' + Number(w.prix).toLocaleString('fr-FR') : '—'}</div>
+          ${w.intention ? `<div class="work-card-intention">${w.intention}</div>` : ''}
+        </div>
+        <div class="work-card-actions">
+          <button class="btn-del" data-i="${i}">SUPPRIMER</button>
+        </div>
+      </div>
+    `).join('')}</div>`;
+
+    el.querySelectorAll('.btn-del').forEach(btn => {
+      btn.addEventListener('click', () => {
+        works.splice(Number(btn.dataset.i), 1);
+        save();
+        render();
+      });
+    });
+  }
+
+  /* ── Photo drag & drop ── */
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropZone.addEventListener('click', e => {
+    if (e.target.id === 'removeImg') return;
+    fileInput.click();
+  });
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadImage(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) loadImage(fileInput.files[0]);
+  });
+
+  document.getElementById('removeImg').addEventListener('click', () => {
+    currentImg = null;
+    dropZone.classList.remove('has-img');
+    dropZone.querySelector('img')?.remove();
+    fileInput.value = '';
+  });
+
+  function loadImage(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      currentImg = e.target.result;
+      dropZone.classList.add('has-img');
+      let img = dropZone.querySelector('img');
+      if (!img) { img = document.createElement('img'); dropZone.prepend(img); }
+      img.src = currentImg;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ── Submit ── */
+  document.getElementById('btnAjouter').addEventListener('click', () => {
+    const titre = document.getElementById('fieldTitre').value.trim();
+    const prix  = document.getElementById('fieldPrix').value.trim();
+    const msg   = document.getElementById('msg');
+
+    msg.className = 'msg';
+    msg.style.display = 'none';
+
+    if (!titre || !prix) {
+      msg.textContent = '→ TITRE ET PRIX OBLIGATOIRES';
+      msg.className = 'msg error';
+      return;
+    }
+
+    works.push({
+      id: Date.now(),
+      titre,
+      prix,
+      dimensions: document.getElementById('fieldDimensions').value.trim(),
+      matiere:    document.getElementById('fieldMatiere').value.trim(),
+      intention:  document.getElementById('fieldIntention').value.trim(),
+      photo:      currentImg,
+    });
+
+    save();
+    render();
+
+    // Reset form
+    document.getElementById('fieldTitre').value = '';
+    document.getElementById('fieldPrix').value  = '';
+    document.getElementById('fieldDimensions').value = '';
+    document.getElementById('fieldMatiere').value    = '';
+    document.getElementById('fieldIntention').value  = '';
+    currentImg = null;
+    dropZone.classList.remove('has-img');
+    dropZone.querySelector('img')?.remove();
+    fileInput.value = '';
+
+    msg.textContent = '✓ ŒUVRE AJOUTÉE AU CATALOGUE';
+    msg.className = 'msg success';
+    setTimeout(() => { msg.className = 'msg'; }, 3000);
+  });
+
+  /* ── Clear all ── */
+  document.getElementById('btnClearAll').addEventListener('click', () => {
+    if (!works.length) return;
+    if (confirm('Effacer toutes les œuvres du catalogue ?')) {
+      works = [];
+      save();
+      render();
+    }
+  });
+
+  /* ── Export ── */
+  document.getElementById('btnExport').addEventListener('click', () => {
+    const exportData = works.map((w, i) => ({
+      num: String(i + 1).padStart(3, '0'),
+      titre: w.titre,
+      prix: w.prix,
+      dimensions: w.dimensions,
+      matiere: w.matiere,
+      intention: w.intention,
+    }));
+    document.getElementById('jsonOutput').textContent = JSON.stringify(exportData, null, 2);
+    document.getElementById('exportModal').classList.add('open');
+  });
+
+  document.getElementById('modalClose').addEventListener('click', () => {
+    document.getElementById('exportModal').classList.remove('open');
+  });
+  document.getElementById('exportModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('exportModal'))
+      document.getElementById('exportModal').classList.remove('open');
+  });
+
+  document.getElementById('btnCopy').addEventListener('click', () => {
+    navigator.clipboard.writeText(document.getElementById('jsonOutput').textContent).then(() => {
+      const btn = document.getElementById('btnCopy');
+      btn.textContent = '✓ COPIÉ';
+      setTimeout(() => { btn.textContent = 'COPIER'; }, 2000);
+    });
+  });
+
+  /* ── Init ── */
+  render();
+</script>
+</body>
+</html>
