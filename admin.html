@@ -412,6 +412,44 @@
     }
     .btn-del:hover { border-color: var(--red); color: var(--red2); }
 
+    .btn-pub {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--smoke);
+      color: var(--fog);
+      font-family: var(--fm);
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 6px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: border-color .15s, color .15s, background .15s;
+    }
+    .btn-pub:hover { border-color: var(--cyan); color: var(--cyan); }
+    .btn-pub.live { border-color: rgba(0,229,204,.4); color: var(--cyan); }
+    .btn-pub.live:hover { background: rgba(0,229,204,.08); }
+
+    .status-badge {
+      position: absolute;
+      bottom: 8px; right: 8px;
+      font-family: var(--fm);
+      font-size: 9px;
+      letter-spacing: 2px;
+      padding: 2px 7px;
+      border-radius: 2px;
+      text-transform: uppercase;
+    }
+    .status-badge.draft {
+      background: rgba(212,25,15,.15);
+      color: var(--red2);
+      border: 1px solid rgba(212,25,15,.3);
+    }
+    .status-badge.live {
+      background: rgba(0,229,204,.1);
+      color: var(--cyan);
+      border: 1px solid rgba(0,229,204,.3);
+    }
+
     /* Export modal */
     .modal-bg {
       position: fixed; inset: 0;
@@ -624,6 +662,7 @@
             ? `<img src="${w.photo}" alt="${w.titre}">`
             : `<div class="no-img">◻</div>`}
           <span class="work-card-num">№ ${String(i + 1).padStart(3, '0')}</span>
+          <span class="status-badge ${w.published ? 'live' : 'draft'}">${w.published ? 'EN LIGNE' : 'BROUILLON'}</span>
         </div>
         <div class="work-card-body">
           <div class="work-card-title">${w.titre || '—'}</div>
@@ -632,10 +671,20 @@
           ${w.intention ? `<div class="work-card-intention">${w.intention}</div>` : ''}
         </div>
         <div class="work-card-actions">
+          <button class="btn-pub ${w.published ? 'live' : ''}" data-i="${i}">${w.published ? 'MASQUER' : 'PUBLIER'}</button>
           <button class="btn-del" data-i="${i}">SUPPRIMER</button>
         </div>
       </div>
     `).join('')}</div>`;
+
+    el.querySelectorAll('.btn-pub').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.i);
+        works[idx].published = !works[idx].published;
+        save();
+        render();
+      });
+    });
 
     el.querySelectorAll('.btn-del').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -710,6 +759,7 @@
       matiere:    document.getElementById('fieldMatiere').value.trim(),
       intention:  document.getElementById('fieldIntention').value.trim(),
       photo:      currentImg,
+      published:  false,
     });
 
     save();
